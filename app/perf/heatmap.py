@@ -18,12 +18,13 @@
 #    limitations under the License.
 
 import collections
-from .regexp import event_regexp, idle_regexp
+from .regexp import event_regexp, idle_regexp, comm_regexp
 from app.common.fileutil import get_file
 
 
 # read and cache offsets
-def perf_read_offsets(file_path):
+def perf_read_offsets(file_path, comm_filter: str):
+    print(comm_filter)
     start = float("+inf")
     end = float("-inf")
     offsets = []
@@ -32,6 +33,7 @@ def perf_read_offsets(file_path):
 
     stack = ""
     ts = -1
+    comm = ''
 
     # process perf script output and search for two things:
     # - event_regexp: to identify event timestamps
@@ -41,21 +43,24 @@ def perf_read_offsets(file_path):
         if (line[0] == '#'):
             continue
         r = event_regexp.search(line)
-        if (r):
+        comm_match = comm_regexp.search(line)
+        if r and comm_match:
+            comm = comm_match.group(1)
             if (stack != ""):
                 # process prior stack
-                if (not idle_regexp.search(stack)):
+                if (comm_filter == '' or comm == comm_filter) and not idle_regexp.search(stack):
+                    print(line)
                     offsets.append(ts)
                 # don't try to cache stacks (could be many Gbytes):
                 stack = ""
-            ts = float(r.group(1))
+            ts = float(r.group('time'))
             if (ts < start):
                 start = ts
             stack = line.rstrip()
         else:
             stack += line.rstrip()
     # last stack
-    if (not idle_regexp.search(stack)):
+    if (comm_filter == '' or comm == comm_filter) and not idle_regexp.search(stack):
         offsets.append(ts)
     if (ts > end):
         end = ts
@@ -63,4 +68,5 @@ def perf_read_offsets(file_path):
     f.close()
 
     res = collections.namedtuple('offsets', ['start', 'end', 'offsets'])(start, end, offsets)
+    print(res)
     return res

@@ -45,6 +45,12 @@ const styles = {
     }
 }
 
+const commOptions = [
+    { key: 0, text: '', value: '' },
+    { key: 10, text: 'java', value: 'java' },
+    { key: 20, text: 'java2', value: 'java2' },
+]
+
 const rowsOptions = [
     { key: 10, text: '10', value: '10' },
     { key: 25, text: '25', value: '25' },
@@ -69,6 +75,7 @@ class Heatmap extends Component {
             'handleSettingsOpen',
             'handleApply',
             'handleEnhanceColors',
+            'handleCommChange',
             'handleRowsChange',
             'fetchData',
             'handleBackClick',
@@ -82,7 +89,8 @@ class Heatmap extends Component {
           rows: '50',
           loading: false,
           settingsOpen: false,
-          enhanceColors: false
+          enhanceColors: false,
+          comm: '',
         };
     }
 
@@ -92,10 +100,10 @@ class Heatmap extends Component {
 
     fetchData() {
         const { filename, type } = this.props.match.params
-        const { rows } = this.state
+        const { rows, comm } = this.state
 
         this.setState({loading: true})
-        fetch(`/heatmap/?filename=${filename}&type=${type}&rows=${rows}`)
+        fetch(`/heatmap/?filename=${filename}&type=${type}&rows=${rows}&comm=${comm}`)
             .then(checkStatus)
             .then(res => {
                 return res.json()
@@ -296,6 +304,17 @@ class Heatmap extends Component {
         )
     }
 
+    handleCommChange(event, data) {
+        if (data.value !== this.state.comm) {
+            this.setState(
+                {comm: data.value},
+                function() {
+                    this.fetchData()
+                }
+            )
+        }
+    }
+
     handleRowsChange(event, data) {
         if (data.value !== this.state.rows) {
             this.setState(
@@ -366,6 +385,17 @@ class Heatmap extends Component {
                             <Button content='Back' icon='left arrow' onClick={this.handleBackClick} />
                         </Grid.Column>
                         <Grid.Column width={12} textAlign='right'>
+                            <Label pointing='right' color='red' size='large'>
+                                Comm
+                            </Label>
+                            <Dropdown
+                                options={commOptions}
+                                onChange={this.handleCommChange}
+                                value={this.state.comm}
+                                compact
+                                selection
+                                labeled
+                            />
                             <Label pointing='right' color='red' size='large'>
                                 Rows
                             </Label>

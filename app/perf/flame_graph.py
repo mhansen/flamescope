@@ -60,7 +60,7 @@ def _get_profile_range(file_path):
             continue
         r = event_regexp.search(line)
         if (r):
-            ts = float(r.group(1))
+            ts = float(r.group('time'))
             if ((linenum % index_factor) == 0):
                 stack_index[file_path].append([linenum, ts])
             if (ts < start):
@@ -195,7 +195,7 @@ def perf_generate_flame_graph(file_path, range_start=None, range_end=None):
                 elif (ts >= start and ts <= end):
                     root = _add_stack(root, stack, comm)
                 stack = []
-            ts = float(r.group(1))
+            ts = float(r.group('time'))
             if (ts > end + overscan):
                 break
             r = comm_regexp.search(line)

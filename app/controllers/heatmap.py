@@ -35,7 +35,7 @@ offsets_cache = {}
 offsets_mtimes = {}
 
 
-def _read_offsets(file_path, file_type):
+def _read_offsets(file_path, file_type, comm):
     # fetch modification timestamp and check cache
     mtime = getmtime(file_path)
     if file_path in offsets_cache:
@@ -43,7 +43,7 @@ def _read_offsets(file_path, file_type):
             # use cached heatmap
             return offsets_cache[file_path]
     if file_type == 'perf':
-        return perf_read_offsets(file_path)
+        return perf_read_offsets(file_path, comm)
     elif file_type == 'cpuprofile':
         return cpuprofile_read_offsets(file_path)
     elif file_type == 'trace_event':
@@ -55,9 +55,9 @@ def _read_offsets(file_path, file_type):
 
 
 # return a heatmap from the cached offsets
-def generate_heatmap(filename, file_type, rows=None):
+def generate_heatmap(filename, file_type, rows=None, comm=None):
     file_path = join(config.PROFILE_DIR, filename)
-    (start, end, offsets) = _read_offsets(file_path, file_type)
+    (start, end, offsets) = _read_offsets(file_path, file_type, comm)
     maxvalue = 0
 
     if rows is None:
